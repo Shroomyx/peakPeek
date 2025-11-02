@@ -3,4 +3,5 @@ plotly
 numpy
 scipy
 pandas
+kaleido
 streamlit
