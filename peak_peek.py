@@ -44,7 +44,7 @@ if answer != correct_answer:
     st.error("Unbelievably moronic. 😤")
     st.stop()
 else:
-    st.success("Wow - applause. 🤛🤛🤛")
+    st.success("Wow! Fantastic. ")
 # --- End Security Check ---
 
 
@@ -926,4 +926,5 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
