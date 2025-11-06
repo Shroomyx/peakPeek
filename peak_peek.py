@@ -44,7 +44,7 @@ if answer != correct_answer:
     st.error("Unbelievably moronic. 😤")
     st.stop()
 else:
-    st.success("Wow! Fantastic. ")
+    st.success("Wow - applause. 🤛🤛🤛")
 # --- End Security Check ---
 
 
@@ -632,6 +632,7 @@ def create_comparison_figure(master_data, selected_files, target_chromatogram,
     return fig
 
 
+
 # --- Sidebar: Parameters ---
 st.sidebar.header("📈 General Plot Settings")
 
@@ -892,6 +893,61 @@ if uploaded_files:
 
         st.plotly_chart(fig, use_container_width=True)
 
+        # --- NEW TOOL: Peak Area & Kd Calculator ---
+        if len(selected_files) == 2:
+            st.markdown("### 📊 Peak Area & Kd Calculator")
+
+            file1, file2 = selected_files
+            df1 = master_data[file1].get(target_chromatogram)
+            df2 = master_data[file2].get(target_chromatogram)
+
+            if df1 is not None and df2 is not None and not df1.empty and not df2.empty:
+                # Option to invert Kd direction
+                invert_kd = st.checkbox("Invert Kd ratio (File1 / File2)", value=False,
+                                        help="Swap the numerator and denominator in Kd calculation.")
+
+                # Restrict to RT range
+                df1_range = df1[(df1["Time"] >= rt_min) & (df1["Time"] <= rt_max)]
+                df2_range = df2[(df2["Time"] >= rt_min) & (df2["Time"] <= rt_max)]
+
+                if not df1_range.empty and not df2_range.empty:
+                    # Integrate peak areas
+                    area1 = np.trapezoid(df1_range["Intensity"], df1_range["Time"])
+                    area2 = np.trapezoid(df2_range["Intensity"], df2_range["Time"])
+
+                    if invert_kd:
+                        kd_value = area1 / area2 if area2 != 0 else np.nan
+                        kd_text = f"{file1} / {file2}"
+                    else:
+                        kd_value = area2 / area1 if area1 != 0 else np.nan
+                        kd_text = f"{file2} / {file1}"
+
+                    # Display results
+                    st.write(f"**Retention Time Range:** {rt_min:.2f} – {rt_max:.2f} min")
+                    st.write(f"**Chromatogram / EIC:** {target_chromatogram}")
+
+                    results_df = pd.DataFrame({
+                        "File": [file1, file2],
+                        "Peak Area": [area1, area2]
+                    })
+
+                    st.dataframe(results_df, width="stretch")
+
+                    col1, col2 = st.columns(2)
+                    with col1:
+                        st.metric(label=f"{file1} Peak Area", value=f"{area1:,.2f}")
+                    with col2:
+                        st.metric(label=f"{file2} Peak Area", value=f"{area2:,.2f}")
+
+                    # Cleaner Kd statement
+                    st.success(
+                        f"**Kd ({target_chromatogram}, {kd_text}) = {kd_value:.3f}**"
+                    )
+                else:
+                    st.info("No data points found in the selected RT range for both files.")
+            else:
+                st.info("Please ensure both files contain the selected chromatogram or EIC.")
+
         st.subheader("💾 Export Plot")
         col1, col2 = st.columns(2)
 
@@ -926,5 +982,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
+
 
 
