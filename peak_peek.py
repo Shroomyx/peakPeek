@@ -16,37 +16,6 @@ import time  # Import time for file deletion logic
 # --- Page Config (MUST be first Streamlit command) ---
 st.set_page_config(page_title="Peak Peek 🧪", layout="wide")
 
-# --- Security Check ---
-# Encoded strings (base64)
-encoded_title = "VmVyaWZ5IHlvdSBhcmUgYSBodW1hbg=="
-encoded_question = "V2hhdCdzIDMwIGRpdmlkZWQgYnkgMj8="
-encoded_options = ["MTU=", "MTg="]  # base64 of "15" and "18"
-
-# Decode at runtime
-title = base64.b64decode(encoded_title).decode("utf-8")
-question = base64.b64decode(encoded_question).decode("utf-8")
-options = [base64.b64decode(o).decode("utf-8") for o in encoded_options]
-
-st.subheader(title)
-
-# Radio with no pre-selection
-answer = st.radio(question, options, index=None, horizontal=True)
-
-# Handle no selection
-if answer is None:
-    st.info("Please answer.")
-    st.stop()
-
-# Correct answer is first option (15)
-correct_answer = options[0]
-
-if answer != correct_answer:
-    st.error("Unbelievably moronic. 😤")
-    st.stop()
-else:
-    st.success("Wow - applause. 🤛🤛🤛")
-# --- End Security Check ---
-
 
 st.title("👀 Peak Peek")
 
@@ -982,6 +951,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
