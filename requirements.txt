@@ -1,10 +1,10 @@
-pymzml==2.5.3
-numpy
-scipy
-pandas
+streamlit==1.32.2
 plotly==5.24.1
 kaleido==0.2.1
-streamlit
+scipy==1.11.4
+numpy==1.26.4
+pandas==2.1.4
+pymzml==2.5.3
 
 
 
