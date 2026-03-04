@@ -21,7 +21,6 @@ st.title("👀 Peak Peek")
 
 
 # --- Parsers ---
-
 def parse_blocks(file_content):
     try:
         text = file_content.decode("utf-8", errors="ignore")
@@ -36,11 +35,11 @@ def parse_blocks(file_content):
             if "Time" in df.columns and "Intensity" in df.columns:
                 df_clean = df[["Time", "Intensity"]].copy()
                 df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
-                return {"TIC": df_clean}  # Simple TIC label
+                return {"TIC": df_clean}  # Return simple TIC
         except Exception:
             pass
 
-    # --- FALLBACK: Original ASCII block parser ---
+    # --- fallback: original ASCII block parsing ---
     blocks = re.split(r"(?=\[)", text)
     parsed = {}
 
@@ -893,6 +892,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
