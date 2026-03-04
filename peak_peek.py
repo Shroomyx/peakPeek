@@ -703,6 +703,10 @@ if uploaded_files:
                 all_chrom_names.update(file_chroms.keys())
 
     if not master_data:
+    csv_uploaded = any(f.name.lower().endswith(".csv") for f in uploaded_files)
+    if csv_uploaded:
+        st.warning("No chromatograms found in CSV. Will attempt to parse as simple TIC.")
+    else:
         st.error("⚠️ Select m/z values for EICs in the side bar.")
         st.stop()
 
@@ -892,6 +896,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
