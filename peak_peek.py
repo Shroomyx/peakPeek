@@ -38,8 +38,8 @@ def parse_blocks(file_content):
             df_clean.columns = ["Time", "Intensity"]
             df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
             return {"TIC": df_clean}  # Return simple TIC
-        except Exception:
-            pass
+    except Exception:
+        pass
 
     # --- fallback: original ASCII block parsing ---
     blocks = re.split(r"(?=\[)", text)
@@ -911,6 +911,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
