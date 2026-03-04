@@ -28,16 +28,18 @@ def parse_blocks(file_content):
         st.error(f"Error decoding file: {e}")
         return {}
 
-    # --- Simple CSV TIC detection ---
-    if "Time" in text and "Intensity" in text:
-        try:
-            df = pd.read_csv(StringIO(text))
-            if "Time" in df.columns and "Intensity" in df.columns:
-                df_clean = df[["Time", "Intensity"]].copy()
-                df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
-                return {"TIC": df_clean}  # Return simple TIC
-        except Exception:
-            pass
+    try:
+        df = pd.read_csv(StringIO(text))
+        # Look for columns matching "time" and "intensity" (case-insensitive)
+        time_col = next((c for c in df.columns if "time" in c.lower()), None)
+        intensity_col = next((c for c in df.columns if "intensity" in c.lower()), None)
+        if time_col and intensity_col:
+            df_clean = df[[time_col, intensity_col]].copy()
+            df_clean.columns = ["Time", "Intensity"]
+            df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
+            return {"TIC": df_clean}  # Return simple TIC
+    except Exception:
+        pass
 
     # --- fallback: original ASCII block parsing ---
     blocks = re.split(r"(?=\[)", text)
@@ -896,6 +898,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
