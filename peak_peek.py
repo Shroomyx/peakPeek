@@ -39,7 +39,7 @@ def parse_blocks(file_content):
             if "Time" in df.columns and "Intensity" in df.columns:
                 df_clean = df[["Time", "Intensity"]].copy()
                 df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
-                return {"MRM Data": df_clean}
+                return {"MRM Data": df_clean}  # simple label
         except Exception:
             pass
     blocks = re.split(r"(?=\[)", text)
@@ -960,6 +960,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
