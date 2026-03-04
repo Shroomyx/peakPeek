@@ -32,7 +32,16 @@ def parse_blocks(file_content):
     except Exception as e:
         st.error(f"Error decoding file: {e}")
         return {}
-
+        
+    if "Time" in text and "Intensity" in text:
+        try:
+            df = pd.read_csv(StringIO(text))
+            if "Time" in df.columns and "Intensity" in df.columns:
+                df_clean = df[["Time", "Intensity"]].copy()
+                df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
+                return {"MRM Data": df_clean}
+        except Exception:
+            pass
     blocks = re.split(r"(?=\[)", text)
     parsed = {}
 
@@ -951,6 +960,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
