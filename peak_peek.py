@@ -664,6 +664,19 @@ if uploaded_files:
             except Exception as e:
                 st.error(f"Failed to read ASCII file {file_name}: {e}")
 
+        if file_name.lower().endswith(".csv"):
+            try:
+                df = pd.read_csv(StringIO(file_content.decode("utf-8", errors="ignore")))
+                time_col = next((c for c in df.columns if "time" in c.lower()), None)
+                intensity_col = next((c for c in df.columns if "intensity" in c.lower()), None)
+            if time_col and intensity_col:
+                df_clean = df[[time_col, intensity_col]].copy()
+                df_clean.columns = ["Time", "Intensity"]
+                df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
+                return {"TIC": df_clean}
+            except Exception:
+                pass
+
         # 2. Parse mzML files (FIXED)
         elif file_name.lower().endswith(".mzml"):
             file_chroms = {}
@@ -898,6 +911,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
