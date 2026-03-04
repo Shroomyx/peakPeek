@@ -29,14 +29,14 @@ def parse_blocks(file_content):
         st.error(f"Error decoding file: {e}")
         return {}
 
-    # --- NEW: Detect simple CSV / MRM files ---
+    # --- Simple CSV TIC detection ---
     if "Time" in text and "Intensity" in text:
         try:
             df = pd.read_csv(StringIO(text))
             if "Time" in df.columns and "Intensity" in df.columns:
                 df_clean = df[["Time", "Intensity"]].copy()
                 df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
-                return {"MRM Data": df_clean}
+                return {"TIC": df_clean}  # Simple TIC label
         except Exception:
             pass
 
@@ -893,6 +893,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
