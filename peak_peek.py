@@ -741,21 +741,21 @@ if uploaded_files:
         if file_name not in master_data or not master_data[file_name]:
             st.warning("No data extracted. Please select 'Extract TIC' or enter m/z values for mzML files.")
             st.stop()
-
+    
         file_data = master_data[file_name]
         file_chrom_list = sorted(file_data.keys())
-
+    
         st.subheader("Single File Overview Mode")
         selected_chromatograms = st.multiselect(
             "Select chromatograms to display:",
             file_chrom_list,
             default=file_chrom_list[:min(len(file_chrom_list), 5)]  # Default to first 5
         )
-
+    
         if not selected_chromatograms:
             st.info("Please select at least one chromatogram to display.")
             st.stop()
-
+    
         fig = create_single_file_figure(
             file_data, selected_chromatograms, file_name,
             rt_min, rt_max, smooth_window,
@@ -763,28 +763,28 @@ if uploaded_files:
             rt_marks_input, stack_step
         )
         export_filename_base = f"{os.path.splitext(file_name)[0]}_overview"
-
+    
     # --- Behavior 2: Multiple Files Uploaded (Comparison Mode) ---
     else:
         st.subheader("Multi-File Comparison Mode")
-
+    
         if not sorted_chrom_list:
             st.warning("No chromatograms available to compare. Check mzML extraction settings.")
             st.stop()
-
+    
         target_chromatogram = st.selectbox("Select chromatogram to compare:", sorted_chrom_list)
-
+    
         sorted_file_list = sorted(master_data.keys())
         selected_files = st.multiselect(
             "Select files to display:",
             sorted_file_list,
             default=sorted_file_list[:min(len(sorted_file_list), 5)]  # Default to first 5
         )
-
+    
         if not selected_files or not target_chromatogram:
             st.info("Please select at least one file and one chromatogram to compare.")
             st.stop()
-
+            
         fig = create_comparison_figure(
             master_data, selected_files, target_chromatogram,
             rt_min, rt_max, smooth_window,
@@ -915,6 +915,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
