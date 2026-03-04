@@ -645,7 +645,7 @@ st.sidebar.header("📨 Export Options")
 svg_transparent = st.sidebar.checkbox("SVG transparent background", False)
 
 # --- File Uploader ---
-uploaded_files = st.file_uploader("Upload ASCII (.txt, .asc, .dat) or mzML files", type=["txt", "asc", "dat", "mzml"],
+uploaded_files = st.file_uploader("Upload ASCII (.txt, .asc, .dat, .csv) or mzML files", type=["txt", "asc", "dat", "mzml", "csv"],
                                   accept_multiple_files=True)
 
 # --- mzML Sidebar Section (Dynamic) ---
@@ -960,6 +960,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
