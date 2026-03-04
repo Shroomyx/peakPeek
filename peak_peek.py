@@ -673,11 +673,11 @@ if uploaded_files:
                             file_chroms["TIC"] = df_clean
                     except Exception as e:
                         st.warning(f"Failed to parse CSV {file_name}: {e}")
-                else:
-                    # --- ASCII block parsing ---
-                    ascii_data = parse_blocks(file_bytes)
-                    if ascii_data:
-                        file_chroms.update(ascii_data)
+            else:
+                # --- ASCII block parsing ---
+                 ascii_data = parse_blocks(file_bytes)
+                if ascii_data:
+                    file_chroms.update(ascii_data)
 
             except Exception as e:
                 st.error(f"Failed to read ASCII/CSV file {file_name}: {e}")
@@ -923,6 +923,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
