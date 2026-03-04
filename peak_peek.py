@@ -653,29 +653,41 @@ if uploaded_files:
         polarity_str = polarity_selection  # "Positive" or "Negative"
 
     for file_name, file_bytes in file_bytes_list:
-
-        # 1. Parse ASCII files
-        if file_name.lower().endswith((".txt", ".asc", ".dat")):
+        
+        # --- ASCII or CSV files ---
+        if file_name.lower().endswith((".txt", ".asc", ".dat", ".csv")):
             try:
-                file_data = parse_blocks(file_bytes)
-                if file_data:
-                    master_data[file_name] = file_data
-                    all_chrom_names.update(file_data.keys())
+                # Decode bytes to text
+                text = file_bytes.decode("utf-8", errors="ignore")
+
+                # --- CSV handling ---
+                if file_name.lower().endswith(".csv"):
+                    try:
+                        df = pd.read_csv(StringIO(text))
+                        time_col = next((c for c in df.columns if "time" in c.lower()), None)
+                        intensity_col = next((c for c in df.columns if "intensity" in c.lower()), None)
+                        if time_col and intensity_col:
+                            df_clean = df[[time_col, intensity_col]].copy()
+                            df_clean.columns = ["Time", "Intensity"]
+                            df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
+                            file_chroms["TIC"] = df_clean
+                    except Exception as e:
+                        st.warning(f"Failed to parse CSV {file_name}: {e}")
+                else:
+                    # --- ASCII block parsing ---
+                    ascii_data = parse_blocks(file_bytes)
+                    if ascii_data:
+                        file_chroms.update(ascii_data)
+
             except Exception as e:
-                st.error(f"Failed to read ASCII file {file_name}: {e}")
+                st.error(f"Failed to read ASCII/CSV file {file_name}: {e}")
+                    # --- ASCII block parsing ---
+                    ascii_data = parse_blocks(file_bytes)
+                    if ascii_data:
+                        file_chroms.update(ascii_data)
 
-        if file_name.lower().endswith(".csv"):
-            try:
-                df = pd.read_csv(StringIO(file_content.decode("utf-8", errors="ignore")))
-                time_col = next((c for c in df.columns if "time" in c.lower()), None)
-                intensity_col = next((c for c in df.columns if "intensity" in c.lower()), None)
-                if time_col and intensity_col:
-                    df_clean = df[[time_col, intensity_col]].copy()
-                    df_clean.columns = ["Time", "Intensity"]
-                    df_clean = df_clean.apply(pd.to_numeric, errors="coerce").dropna()
-                    return {"TIC": df_clean}
-            except Exception:
-                pass
+            except Exception as e:
+                st.error(f"Failed to read ASCII/CSV file {file_name}: {e}")
 
         # 2. Parse mzML files (FIXED)
         elif file_name.lower().endswith(".mzml"):
@@ -911,6 +923,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
