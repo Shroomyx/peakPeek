@@ -647,21 +647,23 @@ if uploaded_files:
     master_data = {}
     all_chrom_names = set()
 
-    # Get polarity string for processing
+    # Get polarity string for mzML processing
     polarity_str = None
     if polarity_selection != "Both":
         polarity_str = polarity_selection  # "Positive" or "Negative"
 
     for file_name, file_bytes in file_bytes_list:
-        
+
+        file_chroms = {}
+
         # --- ASCII or CSV files ---
         if file_name.lower().endswith((".txt", ".asc", ".dat", ".csv")):
             try:
                 # Decode bytes to text
                 text = file_bytes.decode("utf-8", errors="ignore")
 
-                # --- CSV handling ---
                 if file_name.lower().endswith(".csv"):
+                    # --- CSV handling ---
                     try:
                         df = pd.read_csv(StringIO(text))
                         time_col = next((c for c in df.columns if "time" in c.lower()), None)
@@ -673,14 +675,7 @@ if uploaded_files:
                             file_chroms["TIC"] = df_clean
                     except Exception as e:
                         st.warning(f"Failed to parse CSV {file_name}: {e}")
-            else:
-                # --- ASCII block parsing ---
-                 ascii_data = parse_blocks(file_bytes)
-                if ascii_data:
-                    file_chroms.update(ascii_data)
-
-            except Exception as e:
-                st.error(f"Failed to read ASCII/CSV file {file_name}: {e}")
+                else:
                     # --- ASCII block parsing ---
                     ascii_data = parse_blocks(file_bytes)
                     if ascii_data:
@@ -689,46 +684,44 @@ if uploaded_files:
             except Exception as e:
                 st.error(f"Failed to read ASCII/CSV file {file_name}: {e}")
 
-        # 2. Parse mzML files (FIXED)
+        # --- mzML files ---
         elif file_name.lower().endswith(".mzml"):
-            file_chroms = {}
+            try:
+                # 1. Extract TIC if requested
+                if extract_tic:
+                    tic_df = extract_mzml_chromatogram(file_name, file_bytes, None, 0, polarity_str)
+                    if not tic_df.empty:
+                        tic_label = f"TIC ({polarity_str or 'Both'})"
+                        file_chroms[tic_label] = tic_df
 
-            # 2a. Extract TIC if requested
-            if extract_tic:
-                # Call fixed function: mz_target=None for TIC
-                tic_df = extract_mzml_chromatogram(file_name, file_bytes, None, 0, polarity_str)
-                if not tic_df.empty:
-                    tic_label = f"TIC ({polarity_str or 'Both'})"
-                    file_chroms[tic_label] = tic_df
+                # 2. Extract EICs if m/z values are provided
+                if mz_input_str:
+                    try:
+                        mz_values = [float(mz.strip()) for mz in mz_input_str.split(",") if mz.strip()]
+                        for mz in mz_values:
+                            eic_df = extract_mzml_chromatogram(file_name, file_bytes, mz, tolerance, polarity_str)
+                            if not eic_df.empty:
+                                eic_label = f"EIC {mz} +/- {tolerance} Da ({polarity_str or 'Both'})"
+                                i = 2
+                                final_label = eic_label
+                                while final_label in file_chroms:
+                                    final_label = f"{eic_label} ({i})"
+                                    i += 1
+                                file_chroms[final_label] = eic_df
+                    except ValueError:
+                        st.error(f"Invalid m/z value for {file_name}. Please enter comma-separated numbers.")
 
-            # 2b. Extract EICs if m/z values are provided
-            if mz_input_str:
-                try:
-                    mz_values = [float(mz.strip()) for mz in mz_input_str.split(",") if mz.strip()]
-                    for mz in mz_values:
-                        # Call fixed function: pass mz_target
-                        eic_df = extract_mzml_chromatogram(file_name, file_bytes, mz, tolerance, polarity_str)
-                        if not eic_df.empty:
-                            eic_label = f"EIC {mz} +/- {tolerance} Da ({polarity_str or 'Both'})"
-                            # Handle duplicate EIC labels (e.g., if user enters '100, 100')
-                            i = 2
-                            final_label = eic_label
-                            while final_label in file_chroms:
-                                final_label = f"{eic_label} ({i})"
-                                i += 1
-                            file_chroms[final_label] = eic_df
+            except Exception as e:
+                st.warning(f"Failed to process mzML file {file_name}: {e}")
 
-                except ValueError:
-                    st.error("Invalid m/z value. Please enter comma-separated numbers.")
-                except Exception as e:
-                    st.error(f"Failed to extract EIC from {file_name}: {e}")
+        # --- Add parsed chromatograms to master_data ---
+        if file_chroms:
+            if file_name not in master_data:
+                master_data[file_name] = {}
+            master_data[file_name].update(file_chroms)
+            all_chrom_names.update(file_chroms.keys())
 
-            if file_chroms:
-                if file_name not in master_data:
-                    master_data[file_name] = {}
-                master_data[file_name].update(file_chroms)
-                all_chrom_names.update(file_chroms.keys())
-
+    # --- Check if any data was extracted ---
     if not master_data:
         csv_uploaded = any(f.name.lower().endswith(".csv") for f in uploaded_files)
         if csv_uploaded:
@@ -736,7 +729,6 @@ if uploaded_files:
         else:
             st.error("⚠️ Select m/z values for EICs in the side bar.")
             st.stop()
-
     # --- CONDITIONAL UI: Switch based on file count ---
     fig = None
     export_filename_base = "chromatogram"
@@ -923,6 +915,7 @@ if uploaded_files:
 
 else:
     st.info("⬆️ Upload one or more ASCII (.txt, .asc, .dat) or .mzML files to get started.")
+
 
 
 
